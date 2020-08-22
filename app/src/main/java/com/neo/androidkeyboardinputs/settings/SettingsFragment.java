@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 
@@ -13,10 +14,16 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import android.telephony.PhoneNumberFormattingTextWatcher;
+import android.telephony.PhoneNumberUtils;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -32,10 +39,14 @@ import com.neo.androidkeyboardinputs.R;
 import com.neo.androidkeyboardinputs.util.PreferenceKeys;
 import com.neo.androidkeyboardinputs.util.Resources;
 
+import java.util.Locale;
+
 import de.hdodenhof.circleimageview.CircleImageView;
 
 
-public class SettingsFragment extends Fragment implements View.OnClickListener, AdapterView.OnItemSelectedListener {
+public class SettingsFragment extends Fragment implements View.OnClickListener,
+        AdapterView.OnItemSelectedListener,    // handles the spinner adapter functions
+        TextView.OnEditorActionListener {      // listens for clickAction i.e imeOptionActions on the softkeyboard
 
     private static final String TAG = "SettingsFragment";
 
@@ -43,21 +54,21 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
     public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long id) {
         Log.d(TAG, "onItemSelected: clicked.");
 
-        switch (adapterView.getId()){
+        switch (adapterView.getId()) {
 
             case R.id.gender_spinner:
-                Log.d(TAG, "onItemSelected: selected a gender: " + (String)adapterView.getItemAtPosition(pos));
-                mSelectedGender = (String)adapterView.getItemAtPosition(pos);
+                Log.d(TAG, "onItemSelected: selected a gender: " + (String) adapterView.getItemAtPosition(pos));
+                mSelectedGender = (String) adapterView.getItemAtPosition(pos);
                 break;
 
             case R.id.interested_in_spinner:
-                Log.d(TAG, "onItemSelected: selected an interest: " + (String)adapterView.getItemAtPosition(pos));
-                mSelectedInterest = (String)adapterView.getItemAtPosition(pos);
+                Log.d(TAG, "onItemSelected: selected an interest: " + (String) adapterView.getItemAtPosition(pos));
+                mSelectedInterest = (String) adapterView.getItemAtPosition(pos);
                 break;
 
             case R.id.relationship_status_spinner:
-                Log.d(TAG, "onItemSelected: selected a status: " + (String)adapterView.getItemAtPosition(pos));
-                mSelectedStatus = (String)adapterView.getItemAtPosition(pos);
+                Log.d(TAG, "onItemSelected: selected a status: " + (String) adapterView.getItemAtPosition(pos));
+                mSelectedStatus = (String) adapterView.getItemAtPosition(pos);
                 break;
         }
     }
@@ -104,17 +115,40 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
         mProfileImage.setOnClickListener(this);
         mSave.setOnClickListener(this);
         mBackArrow.setOnClickListener(this);
+        mName.setOnEditorActionListener(this);           // listener for enter key on keyboard
 
         checkPermissions();
         setBackgroundImage(view);
         initToolbar();
         getSavedPreferences();
 
+        // handles formatting of phone number i.e working but not on emulator
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mPhoneNumber.addTextChangedListener(new PhoneNumberFormattingTextWatcher(Locale.getDefault().getCountry()));
+        } else {
+            mPhoneNumber.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    s.replace(0, s.length(), PhoneNumberUtils.formatNumber(s.toString()));
+                }
+            });
+        }
+
 
         return view;
     }
 
-    private void getSavedPreferences(){
+    private void getSavedPreferences() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
         String name = preferences.getString(PreferenceKeys.NAME, "");
@@ -128,30 +162,30 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
 
         mSelectedGender = preferences.getString(PreferenceKeys.GENDER, getString(R.string.gender_none));
         String[] genderArray = getActivity().getResources().getStringArray(R.array.gender_array);
-        for(int i = 0; i < genderArray.length; i++){
-            if(genderArray[i].equals(mSelectedGender)){
+        for (int i = 0; i < genderArray.length; i++) {
+            if (genderArray[i].equals(mSelectedGender)) {
                 mGenderSpinner.setSelection(i, false);
             }
         }
 
         mSelectedInterest = preferences.getString(PreferenceKeys.INTERESTED_IN, getString(R.string.interested_in_anyone));
         String[] interestArray = getActivity().getResources().getStringArray(R.array.interested_in_array);
-        for(int i = 0; i < interestArray.length; i++){
-            if(interestArray[i].equals(mSelectedInterest)){
+        for (int i = 0; i < interestArray.length; i++) {
+            if (interestArray[i].equals(mSelectedInterest)) {
                 mInterestedInSpinner.setSelection(i, false);
             }
         }
 
         mSelectedStatus = preferences.getString(PreferenceKeys.RELATIONSHIP_STATUS, getString(R.string.status_looking));
         String[] statusArray = getActivity().getResources().getStringArray(R.array.relationship_status_array);
-        for(int i = 0; i < statusArray.length; i++){
-            if(statusArray[i].equals(mSelectedStatus)){
+        for (int i = 0; i < statusArray.length; i++) {
+            if (statusArray[i].equals(mSelectedStatus)) {
                 mStatusSpinner.setSelection(i, false);
             }
         }
 
         mSelectedImageUrl = preferences.getString(PreferenceKeys.PROFILE_IMAGE, "");
-        if(!mSelectedImageUrl.equals("")){
+        if (!mSelectedImageUrl.equals("")) {
             Glide.with(getContext())
                     .load(mSelectedImageUrl)
                     .into(mProfileImage);
@@ -166,23 +200,22 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
     public void onClick(View view) {
         Log.d(TAG, "onClick: clicked.");
 
-        if(view.getId() == R.id.back_arrow){
+        if (view.getId() == R.id.back_arrow) {
             Log.d(TAG, "onClick: navigating back.");
             mInterface.onBackPressed();
         }
 
-        if(view.getId() == R.id.btn_save){
+        if (view.getId() == R.id.btn_save) {
             Log.d(TAG, "onClick: saving.");
             savePreferences();
         }
 
-        if(view.getId() == R.id.profile_image){
+        if (view.getId() == R.id.profile_image) {
             Log.d(TAG, "onClick: opening activity to choose a photo.");
-            if(mPermissionsChecked){
+            if (mPermissionsChecked) {
                 Intent intent = new Intent(getActivity(), ChoosePhotoActivity.class);
                 startActivityForResult(intent, NEW_PHOTO_REQUEST);
-            }
-            else{
+            } else {
                 checkPermissions();
             }
         }
@@ -193,7 +226,7 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
         super.onActivityResult(requestCode, resultCode, data);
         Log.d(TAG, "onActivityResult: called.");
 
-        if(requestCode == NEW_PHOTO_REQUEST) {     // request code of intent for starting choosePhoto activity
+        if (requestCode == NEW_PHOTO_REQUEST) {     // request code of intent for starting choosePhoto activity
             Log.d(TAG, "onActivityResult: received an activity result from photo request.");
             if (data != null) {
                 if (data.hasExtra(getString(R.string.intent_new_gallery_photo))) {
@@ -201,8 +234,7 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
                             .load(data.getStringExtra(getString(R.string.intent_new_gallery_photo)))
                             .into(mProfileImage);
                     mSelectedImageUrl = data.getStringExtra(getString(R.string.intent_new_gallery_photo));
-                }
-                else if (data.hasExtra(getString(R.string.intent_new_camera_photo))) {
+                } else if (data.hasExtra(getString(R.string.intent_new_camera_photo))) {
                     Glide.with(getContext())
                             .load(data.getStringExtra(getString(R.string.intent_new_camera_photo)))
                             .into(mProfileImage);
@@ -229,15 +261,14 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
         if (cameraGranted) {
             if (storageGranted) {
                 mPermissionsChecked = true;
-            }
-            else{
-                perms = new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE};
+            } else {
+                perms = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE};
             }
         } else {
             if (!storageGranted) {
-                perms = new String[] {Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+                perms = new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE};
             } else {
-                perms = new String[] {Manifest.permission.CAMERA};
+                perms = new String[]{Manifest.permission.CAMERA};
             }
         }
 
@@ -249,16 +280,15 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
 
 
     // saves the needed info into shared preferences for getting when fragment in view again
-    private void savePreferences(){
+    private void savePreferences() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
         SharedPreferences.Editor editor = preferences.edit();
 
         String name = mName.getText().toString();
-        if(!name.equals("")){
+        if (!name.equals("")) {
             editor.putString(PreferenceKeys.NAME, name);
             editor.apply();
-        }
-        else{
+        } else {
             Toast.makeText(getActivity(), "Enter your name", Toast.LENGTH_SHORT).show();
         }
 
@@ -279,7 +309,7 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
         editor.putString(PreferenceKeys.RELATIONSHIP_STATUS, mSelectedStatus);
         editor.apply();
 
-        if(!mSelectedImageUrl.equals("")){
+        if (!mSelectedImageUrl.equals("")) {
             editor.putString(PreferenceKeys.PROFILE_IMAGE, mSelectedImageUrl);
             editor.apply();
         }
@@ -288,7 +318,7 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
     }
 
 
-    private void setBackgroundImage(View view){
+    private void setBackgroundImage(View view) {
         ImageView backgroundView = view.findViewById(R.id.background);
         Glide.with(getActivity())
                 .load(Resources.BACKGROUND_HEARTS)
@@ -296,7 +326,7 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
 
     }
 
-    private void initToolbar(){
+    private void initToolbar() {
         Log.d(TAG, "initToolbar: initializing toolbar.");
         mBackArrow.setOnClickListener(this);
         mFragmentHeading.setText(getString(R.string.tag_fragment_settings));
@@ -314,6 +344,14 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy: called.");
+    }
+
+    @Override
+    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+        if(actionId == EditorInfo.IME_ACTION_DONE){
+            savePreferences();
+        }
+        return false;
     }
 }
 
