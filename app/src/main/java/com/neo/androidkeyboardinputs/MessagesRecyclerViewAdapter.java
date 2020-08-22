@@ -27,8 +27,10 @@ public class MessagesRecyclerViewAdapter extends RecyclerView.Adapter<MessagesRe
     private static final String TAG = "ConnectionsAdapter";
 
     //vars
-    private ArrayList<User> mUsers = new ArrayList<>();
-    private ArrayList<User> mFilteredUsers = new ArrayList<>();
+    private ArrayList<User> mUsers = new ArrayList<>();                             // list of all users
+    private ArrayList<Message> mFilteredMessages = new ArrayList<>();               // holds list of messages and users assoc with it based on searchQuery if no query ret all messages
+    private ArrayList<Message> mMessages = new ArrayList<>();                       // holds list of messages and users assoc with it
+    //    private ArrayList<User> mFilteredUsers = new ArrayList<>();                   // list of filtered users based on searchQuery if any else same as all users
     private Context mContext;
     private IMainActivity mInterface;
 
@@ -36,7 +38,20 @@ public class MessagesRecyclerViewAdapter extends RecyclerView.Adapter<MessagesRe
     public MessagesRecyclerViewAdapter(Context context, ArrayList<User> users) {
         mContext = context;
         mUsers = users;
-        mFilteredUsers = users;
+
+        setMessages();
+    }
+
+
+    /**
+     * sets the messages to the list of message field
+     */
+    private void setMessages() {
+        for (int i = 0; i < mUsers.size(); i++) {
+            // create a message for each user and assoc user with the msg
+            mMessages.add(new Message(mUsers.get(i), Messages.MESSAGES[i]));
+        }
+        mFilteredMessages = mMessages;
     }
 
     @Override
@@ -50,7 +65,8 @@ public class MessagesRecyclerViewAdapter extends RecyclerView.Adapter<MessagesRe
     public void onBindViewHolder(final ViewHolder holder, final int position) {
         Log.d(TAG, "onBindViewHolder: called.");
 
-        final User user = mFilteredUsers.get(position);
+        final User user = mFilteredMessages.get(position).getUser();
+        final String message = mFilteredMessages.get(position).getMessage();
 
         RequestOptions requestOptions = new RequestOptions()
                 .placeholder(R.drawable.ic_launcher_background);
@@ -61,7 +77,7 @@ public class MessagesRecyclerViewAdapter extends RecyclerView.Adapter<MessagesRe
                 .into(holder.image);
 
         holder.name.setText(user.getName());
-        holder.message.setText(Messages.MESSAGES[position]); //generate a random message
+        holder.message.setText(message);                //generate a message, that's associated with user in focus
 
         holder.parent.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -81,29 +97,28 @@ public class MessagesRecyclerViewAdapter extends RecyclerView.Adapter<MessagesRe
             protected FilterResults performFiltering(CharSequence charSequence) {
                 String charString = charSequence.toString();
                 if (charString.isEmpty()) {
-                    mFilteredUsers = mUsers;
+                    mFilteredMessages = mMessages;
                 } else {
-                    ArrayList<User> filteredList = new ArrayList<>();
-                    for (User row : mUsers) {
-
-                        // name match condition. this might differ depending on your requirement
-                        // here we are looking for name or phone number match
-                        if (row.getName().toLowerCase().contains(charString.toLowerCase())) {
-                            filteredList.add(row);
+                    ArrayList<Message> filteredList = new ArrayList<>();
+                    for(int i = 0; i < mMessages.size(); i++){
+                        // checks if the message in focus or user in focus has char sequence passed in search, and filter by user or message
+                        if(mMessages.get(i).getMessage().toLowerCase().contains(charString.toLowerCase())){
+                            filteredList.add(mMessages.get(i));
+                        } else if(mUsers.get(i).getName().toLowerCase().contains(charString.toLowerCase())){
+                            filteredList.add(mMessages.get(i));
                         }
                     }
-
-                    mFilteredUsers = filteredList;
+                    mFilteredMessages = filteredList;
                 }
 
                 FilterResults filterResults = new FilterResults();
-                filterResults.values = mFilteredUsers;
-                return filterResults;
+                filterResults.values = mFilteredMessages;
+                return filterResults;                                   // after ret filterResults with val, publishResults is called
             }
 
             @Override
             protected void publishResults(CharSequence charSequence, FilterResults filterResults) {
-                mFilteredUsers = (ArrayList<User>) filterResults.values;
+                mFilteredMessages = (ArrayList<Message>) filterResults.values;
 
                 // refresh the list with filtered data
                 notifyDataSetChanged();
@@ -119,11 +134,11 @@ public class MessagesRecyclerViewAdapter extends RecyclerView.Adapter<MessagesRe
 
     @Override
     public int getItemCount() {
-        return mFilteredUsers.size();
+        return mFilteredMessages.size();
     }
 
 
-    public class ViewHolder extends RecyclerView.ViewHolder{
+    public class ViewHolder extends RecyclerView.ViewHolder {
 
         ImageView image;
         TextView name;

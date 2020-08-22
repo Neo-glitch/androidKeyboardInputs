@@ -59,7 +59,6 @@ public class MessagesFragment extends Fragment implements SwipeRefreshLayout.OnR
     private void initSearchView(){
         // Associate searchable configuration with the SearchView
         SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
-
         mSearchView.setSearchableInfo(searchManager
                 .getSearchableInfo(getActivity().getComponentName()));
         mSearchView.setMaxWidth(Integer.MAX_VALUE);
