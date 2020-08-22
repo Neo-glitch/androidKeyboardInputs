@@ -115,7 +115,9 @@ public class SettingsFragment extends Fragment implements View.OnClickListener,
         mProfileImage.setOnClickListener(this);
         mSave.setOnClickListener(this);
         mBackArrow.setOnClickListener(this);
-        mName.setOnEditorActionListener(this);           // listener for enter key on keyboard
+
+        // listener for enter key on keyboard
+        mName.setOnEditorActionListener(this);
 
         checkPermissions();
         setBackgroundImage(view);
