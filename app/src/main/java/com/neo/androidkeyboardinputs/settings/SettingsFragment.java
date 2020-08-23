@@ -46,7 +46,8 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class SettingsFragment extends Fragment implements View.OnClickListener,
         AdapterView.OnItemSelectedListener,    // handles the spinner adapter functions
-        TextView.OnEditorActionListener {      // listens for clickAction i.e imeOptionActions on the softkeyboard
+        TextView.OnEditorActionListener,        // listens for clickAction i.e imeOptionActions on the softkeyboard
+        View.OnFocusChangeListener {            // listens when a view is in focus or not
 
     private static final String TAG = "SettingsFragment";
 
@@ -150,6 +151,9 @@ public class SettingsFragment extends Fragment implements View.OnClickListener,
         return view;
     }
 
+    /**
+     * gets values stored from saved preferences and populates views
+     */
     private void getSavedPreferences() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
@@ -196,6 +200,11 @@ public class SettingsFragment extends Fragment implements View.OnClickListener,
         mGenderSpinner.setOnItemSelectedListener(this);
         mInterestedInSpinner.setOnItemSelectedListener(this);
         mStatusSpinner.setOnItemSelectedListener(this);
+
+        // sets focus changes listeners
+        mGenderSpinner.setOnFocusChangeListener(this);
+        mInterestedInSpinner.setOnFocusChangeListener(this);
+        mStatusSpinner.setOnFocusChangeListener(this);
     }
 
     @Override
@@ -354,6 +363,66 @@ public class SettingsFragment extends Fragment implements View.OnClickListener,
             savePreferences();
         }
         return false;
+    }
+
+    /**
+     * implements the navigation from one View to another
+     */
+    public void moveFocusForward(){
+        try{
+            if(getActivity().getCurrentFocus().getId() == R.id.back_arrow){
+                Log.d(TAG, "moveFocusForward: setting focus to profile image");
+                mProfileImage.requestFocus();
+            }
+            else if(getActivity().getCurrentFocus().getId() == R.id.profile_image){
+                Log.d(TAG, "moveFocusForward: setting focus to name field");
+                mName.requestFocus();
+            }
+            else if(getActivity().getCurrentFocus().getId() == R.id.name){
+                Log.d(TAG, "moveFocusForward: setting focus to email field");
+                mEmail.requestFocus();
+            }
+            else if(getActivity().getCurrentFocus().getId() == R.id.email){
+                Log.d(TAG, "moveFocusForward: setting focus to phone field");
+                mPhoneNumber.requestFocus();
+            }
+            else if(getActivity().getCurrentFocus().getId() == R.id.phone_number){
+                Log.d(TAG, "moveFocusForward: setting focus to gender field");
+                mGenderSpinner.requestFocus();
+            }
+            else if(getActivity().getCurrentFocus().getId() == R.id.gender_spinner){
+                Log.d(TAG, "moveFocusForward: setting focus to interested in field");
+                mInterestedInSpinner.requestFocus();
+            }
+            else if(getActivity().getCurrentFocus().getId() == R.id.interested_in_spinner){
+                Log.d(TAG, "moveFocusForward: setting focus to status field");
+                mStatusSpinner.requestFocus();
+            }
+            else if(getActivity().getCurrentFocus().getId() == R.id.relationship_status_spinner){
+                Log.d(TAG, "moveFocusForward: setting focus to save button");
+                mSave.requestFocus();
+            }
+
+            else if(getActivity().getCurrentFocus().getId() == R.id.btn_save){
+                Log.d(TAG, "moveFocusForward: setting focus to back arrow");
+                mBackArrow.getParent().requestChildFocus(mBackArrow, mBackArrow);   // forces the focus there since it's in a toolBar
+                mBackArrow.requestFocus();
+            }
+        }catch (NullPointerException e){
+            e.printStackTrace();
+        }
+
+    }
+
+    @Override
+    public void onFocusChange(View v, boolean hasFocus) {
+        switch (v.getId()){
+            case R.id.gender_spinner:
+            case R.id.interested_in_spinner:
+            case R.id.relationship_status_spinner:
+                mInterface.hideKeyboard();                  // hides keyboard if any of cases is in focus
+                break;
+        }
     }
 }
 

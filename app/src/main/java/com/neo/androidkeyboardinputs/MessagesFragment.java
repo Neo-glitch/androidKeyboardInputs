@@ -9,7 +9,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
@@ -34,10 +36,15 @@ public class MessagesFragment extends Fragment implements SwipeRefreshLayout.OnR
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private MessagesRecyclerViewAdapter mRecyclerViewAdapter;
     private RecyclerView mRecyclerView;
-    private SearchView mSearchView;
+    public SearchView mSearchView;
 
     //vars
     private ArrayList<User> mUsers = new ArrayList<>();
+
+    // for custom keyboard visibility
+    private IMainActivity mIMainActivity;
+    static int mAppHeight;
+    static int currentOrientation = -1;
 
 
     @Nullable
@@ -52,6 +59,7 @@ public class MessagesFragment extends Fragment implements SwipeRefreshLayout.OnR
         mSwipeRefreshLayout.setOnRefreshListener(this);
         getConnections();
         initSearchView();
+        setKeyboardVisibilityListener();
 
         return view;
     }
@@ -127,6 +135,81 @@ public class MessagesFragment extends Fragment implements SwipeRefreshLayout.OnR
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy: called.");
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        mIMainActivity = (IMainActivity) getActivity();
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mIMainActivity = null;
+    }
+
+    /**
+     * method that listens for keyboard visibility
+     */
+    public void setKeyboardVisibilityListener() {
+
+        final View contentView = getActivity().findViewById(android.R.id.content);                 // gets ref to the rootVew i.e fragmentView
+
+        // listens for changes to the view(fragment)
+        contentView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+
+            private int mPreviousHeight;
+
+            @Override
+            public void onGlobalLayout() {
+
+                int newHeight = contentView.getHeight();
+
+                if (newHeight == mPreviousHeight)
+
+                    return;
+
+                mPreviousHeight = newHeight;
+
+                Log.d(TAG, "onGlobalLayout: new height: " + newHeight);
+                if (getActivity().getResources().getConfiguration().orientation != currentOrientation) {  // just to test and get starting orientation of app
+
+                    currentOrientation = getActivity().getResources().getConfiguration().orientation;
+
+                    mAppHeight =0;
+                    Log.d(TAG, "onGlobalLayout: current Orientation: " + currentOrientation);
+                    Log.d(TAG, "onGlobalLayout: app height: " + mAppHeight);
+                }
+
+                if (newHeight >= mAppHeight) {          // just to test, and get starting height of app
+
+                    mAppHeight = newHeight;
+                    Log.d(TAG, "onGlobalLayout: app height: " + mAppHeight);
+                }
+                Log.d(TAG, "onGlobalLayout: -------------------------\n");
+
+                if (newHeight != 0) {
+                    MessagesFragment messagesFragment = (MessagesFragment) getActivity()
+                            .getSupportFragmentManager().findFragmentByTag(getActivity().getString(R.string.tag_fragment_messages));
+                    if(messagesFragment.isVisible()){
+                        if (mAppHeight > newHeight) {
+                            Log.d(TAG, "onGlobalLayout: hiding bottom nav");
+                            // Height decreased: keyboard was shown
+                            mIMainActivity.setBottomNavigationVisibility(false);
+
+                        }
+                        else {
+                            Log.d(TAG, "onGlobalLayout: showing bottom nav");
+                            // Height increased: keyboard was hidden
+                            mIMainActivity.setBottomNavigationVisibility(true);
+                        }
+                    }
+                }
+
+            }
+
+        });
     }
 
 

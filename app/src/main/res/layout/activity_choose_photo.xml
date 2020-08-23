@@ -15,13 +15,20 @@
             android:id="@+id/relLayout1"
             android:layout_above="@+id/relLayout2">
 
-
-            <androidx.viewpager.widget.ViewPager
+            <!-- customViewPager with dpad alone not swapping btw tabs -->
+            <com.neo.androidkeyboardinputs.settings.MyViewPager
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:id="@+id/viewpager_container">
 
-            </androidx.viewpager.widget.ViewPager>
+            </com.neo.androidkeyboardinputs.settings.MyViewPager>
+
+
+<!--            <androidx.viewpager.widget.ViewPager-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="match_parent"-->
+<!--                android:id="@+id/viewpager_container">-->
+<!--            </androidx.viewpager.widget.ViewPager>-->
 
 
         </RelativeLayout>

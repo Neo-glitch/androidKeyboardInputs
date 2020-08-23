@@ -23,11 +23,14 @@
             android:background="@android:color/white"
             android:elevation="5dp">
 
+            <!--  iconified attr makes widget to be an icon until clicked but for
+            keyboard nav, we want it to be just ready to go-->
             <androidx.appcompat.widget.SearchView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:id="@+id/action_search"
-                android:focusable="false">
+                android:focusable="false"
+                app:iconifiedByDefault="false">
 
 
             </androidx.appcompat.widget.SearchView>

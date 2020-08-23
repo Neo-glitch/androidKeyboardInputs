@@ -14,7 +14,9 @@
         <RelativeLayout
             android:layout_width="50dp"
             android:layout_height="match_parent"
-            android:id="@+id/back_arrow">
+            android:id="@+id/back_arrow"
+            android:focusable="true"
+            android:background="?android:attr/selectableItemBackground">
 
             <ImageView
                 android:layout_width="20dp"
@@ -30,7 +32,9 @@
             android:layout_height="match_parent"
             android:layout_toRightOf="@+id/back_arrow"
             android:gravity="center_vertical"
-            android:id="@+id/relLayoutTop">
+            android:id="@+id/relLayoutTop"
+            android:focusable="true"
+            android:background="?android:attr/selectableItemBackground">
 
             <de.hdodenhof.circleimageview.CircleImageView
                 android:layout_width="35dp"
@@ -92,6 +96,8 @@
         android:background="@drawable/grey_border_top"
         android:id="@+id/relLayout1">
 
+
+        <!-- since not focusable by default -->
         <TextView
             android:layout_width="80dp"
             android:layout_height="match_parent"
@@ -101,7 +107,8 @@
             android:textSize="15sp"
             android:id="@+id/post_message"
             android:gravity="center"
-            android:background="@drawable/blue_onclick_grey"/>
+            android:background="@drawable/blue_onclick_grey"
+            android:focusable="true"/>
 
         <!--  editText with suggestions with auto complete-->
         <AutoCompleteTextView

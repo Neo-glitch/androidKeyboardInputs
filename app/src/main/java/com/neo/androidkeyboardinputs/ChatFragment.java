@@ -63,6 +63,22 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         getSavedPreferences();
     }
 
+    /**
+     * sim sending message but without clicking on send Button in fragment
+     */
+    public void postMessage() {
+        String message = mNewMessage.getText().toString();
+        if(("" + message.charAt(message.length() - 1)).equals(System.getProperty("line.separator"))){  // checks if the last char of the message String is "\n"
+            // removes the last char
+            message = message.substring(0, message.length()-1);
+        }
+
+        mMessages.add(new Message(mCurrentUser, message));
+        mChatRecyclerViewAdapter.notifyDataSetChanged();
+        mNewMessage.setText("");
+        mRecyclerView.smoothScrollToPosition(mMessages.size() - 1);
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
@@ -136,7 +152,11 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         }
         if(view.getId() == R.id.post_message){
             Log.d(TAG, "onClick: posting new message.");
-            mMessages.add(new Message(mCurrentUser, mNewMessage.getText().toString()));
+            String message = mNewMessage.getText().toString();
+            if(("" + message.charAt(message.length() - 1)).equals(System.getProperty("line.separator"))){  // checks if the last char of the message String is "\n"
+                message = message.substring(0, message.length()-1);
+            }
+            mMessages.add(new Message(mCurrentUser, message));
             mChatRecyclerViewAdapter.notifyDataSetChanged();
             mNewMessage.setText("");
             mRecyclerView.smoothScrollToPosition(mMessages.size() - 1);
@@ -169,6 +189,41 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         super.onAttach(context);
         mInterface = (IMainActivity) getActivity();
     }
+
+    /**
+     * implements the navigation from one View to another
+     */
+    public void moveFocusForward(){
+        try{
+            if(getActivity().getCurrentFocus().getId() == R.id.back_arrow){
+                Log.d(TAG, "moveFocusForward: setting focus to top relative layout");
+                mRelativeLayoutTop.getParent().requestChildFocus(mRelativeLayoutTop, mRelativeLayoutTop);
+                mRelativeLayoutTop.requestFocus();
+            }
+            else if(getActivity().getCurrentFocus().getId() == R.id.relLayoutTop){
+                Log.d(TAG, "moveFocusForward: setting focus to message input field");
+                mNewMessage.requestFocus();
+            }
+            else if(getActivity().getCurrentFocus().getId() == R.id.input_message){
+                Log.d(TAG, "moveFocusForward: setting focus to send button");
+                mSendMessage.requestFocus();
+            }
+            else if(getActivity().getCurrentFocus().getId() == R.id.post_message){
+                Log.d(TAG, "moveFocusForward: setting focus to back arrow");
+                mBackArrow.getParent().requestChildFocus(mBackArrow, mBackArrow);
+                mBackArrow.requestFocus();
+            }
+            else{
+                Log.d(TAG, "moveFocusForward: setting focus to back arrow");
+                mBackArrow.getParent().requestChildFocus(mBackArrow, mBackArrow);
+                mBackArrow.requestFocus();
+            }
+        }catch (NullPointerException e){
+            e.printStackTrace();
+        }
+
+    }
+
 
 }
 

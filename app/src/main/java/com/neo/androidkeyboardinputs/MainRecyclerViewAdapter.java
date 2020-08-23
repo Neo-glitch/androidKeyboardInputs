@@ -1,6 +1,7 @@
 package com.neo.androidkeyboardinputs;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -61,8 +62,18 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
             @Override
             public void onClick(View v) {
                 Log.d(TAG, "onClick: clicked on: " + mUsers.get(position).getName());
-
                 mInterface.inflateViewProfileFragment(mUsers.get(position));
+            }
+        });
+        holder.cardView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                // if view is in focus
+                if(v.hasFocus()){
+                    holder.cardView.setCardBackgroundColor(mContext.getResources().getColor(R.color.lightGrey));
+                } else{
+                    holder.cardView.setCardBackgroundColor(Color.WHITE);
+                }
             }
         });
     }
